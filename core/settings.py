@@ -6,9 +6,7 @@ class ApiSettings(BaseSettings):
     API_SECRET: str
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_prefix="API_",
-        extra='ignore'
+        env_file=".env", env_prefix="API_", extra="ignore"
     )
 
 
