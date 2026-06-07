@@ -12,3 +12,6 @@ def hash_password(password: str) -> str:
 def verify_password(password: str, stored: str) -> bool:
     """Check ``password`` against a hash produced by :func:`hash_password`."""
     return _password_hash.verify(password, stored)
+
+
+# just to trigger
