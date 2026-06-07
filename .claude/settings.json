@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r \".tool_input.file_path // empty\" | { read -r f; case \"$f\" in */docker/.env|docker/.env) printf \"%s\" \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PreToolUse\\\",\\\"permissionDecision\\\":\\\"deny\\\",\\\"permissionDecisionReason\\\":\\\"Reading and writing docker/.env is blocked by a project hook (it contains secrets).\\\"}}\";; esac; }",
+            "statusMessage": "Checking for docker/.env access"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "c=$(jq -r \".tool_input.command // empty\"); if printf \"%s\" \"$c\" | grep -qE \"docker/\\.env([^.A-Za-z0-9_]|$)\"; then printf \"%s\" \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PreToolUse\\\",\\\"permissionDecision\\\":\\\"deny\\\",\\\"permissionDecisionReason\\\":\\\"Accessing docker/.env via Bash is blocked by a project hook (it contains secrets).\\\"}}\"; fi",
+            "statusMessage": "Checking for docker/.env access"
+          }
+        ]
+      }
+    ]
+  }
+}
