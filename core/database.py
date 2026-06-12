@@ -29,7 +29,7 @@ class Database:
     async def connect(self) -> None:
         logger.info("creating connection pools")
         self.engine = create_async_engine(
-            db_settings.url, pool_pre_ping=True, pool_size=1
+            db_settings.url, pool_pre_ping=True, pool_size=10, max_overflow=2
         )
         self.session_factory = async_sessionmaker(self.engine, expire_on_commit=False)
 

@@ -116,3 +116,11 @@ uv run pre-commit run --all-files  # run all hooks
 ```
 
 Linting and formatting use **Ruff** (config in `pyproject.toml`), enforced locally via pre-commit and in CI via `.github/workflows/lint.yml` on every pull request. There are no tests yet.
+
+<!-- What i did at modoenergy: -->
+1. planning complex tasks
+2. microservices split
+3. caching ?
+
+4. switch to trunc base
+5. lag we had one partition for a topic and data provid

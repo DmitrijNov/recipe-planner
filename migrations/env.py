@@ -5,10 +5,11 @@ from sqlalchemy import engine_from_config, pool
 
 from core.database import Base
 from core.settings import db_settings
+from recipes import models as recipes_models  # noqa: F401
 
 # Import model modules here so their tables register on Base.metadata
 # and become visible to autogenerate, e.g.:
-# from users import models  # noqa: F401
+from users import models as users_models  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -33,6 +34,15 @@ target_metadata = Base.metadata
 # ... etc.
 
 
+def process_revision_directives(context, revision, directives):
+    """Don't write a migration file when autogenerate finds no changes."""
+    if getattr(config.cmd_opts, "autogenerate", False):
+        script = directives[0]
+        if script.upgrade_ops.is_empty():
+            directives[:] = []  # ← discard → no file created
+            print("No schema changes detected — skipping empty migration.")
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -51,6 +61,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        process_revision_directives=process_revision_directives,
     )
 
     with context.begin_transaction():

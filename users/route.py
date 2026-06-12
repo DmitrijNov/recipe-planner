@@ -1,14 +1,9 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import db
-from core.security import hash_password
 from users.models import User
-from users.schemas import RegisterUserRequest
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -22,41 +17,8 @@ async def read_users(session: AsyncSession = Depends(db.session)):
     }
 
 
-@router.post("/")
-async def create_user(
-    user: RegisterUserRequest, session: AsyncSession = Depends(db.session)
-):
-    db_user = User(
-        username=user.username,
-        email=user.email,
-        password_hash=hash_password(user.password),
-    )
-    session.add(db_user)
-
-    try:
-        await session.commit()
-    except IntegrityError as exc:
-        await session.rollback()
-        constraint = (
-            getattr(getattr(exc.orig, "diag", None), "constraint_name", "") or ""
-        )
-        if "email" in constraint:
-            detail = "Email already registered"
-        elif "username" in constraint:
-            detail = "Username already taken"
-        else:
-            detail = "User already exists"
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=detail) from exc
-
-    await session.refresh(db_user)
-    return {
-        "id": db_user.id,
-        "username": db_user.username,
-        "email": db_user.email,
-    }
-
-
-@router.get("/test")
-async def test_endpoint(query: Annotated[str, Query(min_length=3)]):
-    print("test")
-    return {"message": f"Received: {query}"}
+async def get_current_user(
+    request: Request, session: AsyncSession = Depends(db.session)
+) -> None:
+    user = await session.execute(select(User).limit(1))
+    return user.scalar_one()
