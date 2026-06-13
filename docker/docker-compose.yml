@@ -4,7 +4,7 @@ services:
     # Run `docker compose -f docker/docker-compose.yml up -d` from the project
     # root so this .env (shared with the app and Alembic) resolves.
     env_file:
-      - .env
+      - ../.env
     ports:
       - "5432:5432"
     volumes:

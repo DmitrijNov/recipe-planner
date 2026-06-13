@@ -2,10 +2,15 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from auth.security.tokens import require_bearer_token
 from core.database import db
 from users.models import User
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(
+    prefix="/users",
+    tags=["users"],
+    dependencies=[Depends(require_bearer_token)],
+)
 
 
 @router.get("/")
