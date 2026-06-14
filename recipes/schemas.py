@@ -8,6 +8,7 @@ class RecipeResponse(BaseModel):
     uuid: UUID
     title: str
     description: str
+    image_url: str | None
 
 
 class CreateRecipeSchema(BaseModel):

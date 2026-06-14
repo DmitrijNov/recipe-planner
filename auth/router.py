@@ -1,61 +1,59 @@
-import datetime
-
-from fastapi import Depends, HTTPException, Request, status
-from fastapi.routing import Router
-from sqlalchemy.exc import IntegrityError
+from fastapi import Depends, HTTPException, status
+from fastapi.routing import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.schemas import LoginPayloadSchema, RegisterUserSchema, Token
-from auth.security.passwords import hash_password
+from auth.schemas import (
+    LoginUserSchema,
+    RefreshTokenRequest,
+    RegisterReqSchema,
+    TokenResponse,
+)
+from auth.services.auth import AuthService
 from core.database import db
-from users.models import User
 
-auth_router = Router(prefix="/auth")
+auth_router = APIRouter(prefix="/auth")
+auth_service = AuthService()
 
 
-@auth_router.post("/login", response_model=Token)
+@auth_router.post("/login", response_model=TokenResponse)
 async def login(
-    request: Request,
-    login_data: LoginPayloadSchema,
+    login_data: LoginUserSchema,
     session: AsyncSession = Depends(db.session),
 ):
-    user = await session.get(User, username=login_data.username)
-    if not user:
-        # todo: make a service for it
-        ...
-    return False
-
-
-@auth_router.post("/register")
-async def register(
-    user: RegisterUserSchema, session: AsyncSession = Depends(db.session)
-):
-    CONSTRAINT_MESSAGES = {
-        "uq_users_email": "Email already registered",
-        "uq_users_username": "Username already taken",
-    }
-
-    db_user = User(
-        username=user.username,
-        email=user.email,
-        password_hash=hash_password(user.password),
-        created_at=datetime.datetime.now(tz=datetime.UTC),
-    )
-    session.add(db_user)
-
-    try:
-        await session.commit()
-    except IntegrityError as exc:
-        await session.rollback()
-        name = getattr(exc.orig, "constraint_name", None) or getattr(
-            getattr(exc.orig, "diag", None), "constraint_name", None
+    tokens = await auth_service.authenticate(login_data=login_data, session=session)
+    if not tokens:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid username or password",
         )
-        detail = CONSTRAINT_MESSAGES.get(name, "User already exists")
-        raise HTTPException(status.HTTP_409_CONFLICT, detail) from exc
+    return tokens
 
-    await session.refresh(db_user)
-    return {
-        "id": db_user.id,
-        "username": db_user.username,
-        "email": db_user.email,
-    }
+
+@auth_router.post("/refresh", response_model=TokenResponse)
+async def refresh(
+    payload: RefreshTokenRequest,
+    session: AsyncSession = Depends(db.session),
+):
+    tokens = await auth_service.refresh(
+        refresh_token=payload.refresh_token,
+        session=session,
+    )
+    if not tokens:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid refresh token",
+        )
+    return tokens
+
+
+@auth_router.post("/register", response_model=TokenResponse)
+async def register(
+    user: RegisterReqSchema, session: AsyncSession = Depends(db.session)
+):
+    tokens = await auth_service.register(user_data=user, session=session)
+    if not tokens:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="user already exists",
+        )
+    return tokens

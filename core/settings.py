@@ -2,8 +2,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class ApiSettings(BaseSettings):
-    API_KEY: str
-    API_SECRET: str
+    KEY: str
+    SECRET: str
     JWT_SECRET: str
 
     model_config = SettingsConfigDict(
@@ -33,3 +33,4 @@ class DatabaseSettings(BaseSettings):
 
 
 db_settings = DatabaseSettings()
+api_settings = ApiSettings()
