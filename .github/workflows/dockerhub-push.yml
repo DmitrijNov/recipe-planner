@@ -86,7 +86,8 @@ jobs:
         id: docker_tags
         shell: bash
         run: |
-          image="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          image_name_lc="$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')"
+          image="${{ env.REGISTRY }}/$image_name_lc"
           version_tag="${{ steps.version.outputs.tag }}"
           tags=""
 
