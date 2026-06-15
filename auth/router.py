@@ -8,11 +8,11 @@ from auth.schemas import (
     RegisterReqSchema,
     TokenResponse,
 )
-from auth.services.auth import AuthService
+from auth.services.auth import AuthService, TokenService
 from core.database import db
 
 auth_router = APIRouter(prefix="/auth")
-auth_service = AuthService()
+auth_service = AuthService(token_service=TokenService())
 
 
 @auth_router.post("/login", response_model=TokenResponse)

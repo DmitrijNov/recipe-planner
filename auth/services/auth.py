@@ -59,7 +59,8 @@ class TokenService:
 
 
 class AuthService:
-    token_service = TokenService()
+    def __init__(self, token_service):
+        self.token_service = TokenService()
 
     async def authenticate(
         self, login_data: LoginUserSchema, session: AsyncSession

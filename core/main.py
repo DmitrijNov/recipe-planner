@@ -11,6 +11,17 @@ from users.route import router as users_router
 
 logging.basicConfig(level=logging.INFO)
 
+
+class SkipPingAccessLogFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        message = record.getMessage()
+        return (
+            '"GET / HTTP/1.1"' not in message and '"GET /ping HTTP/1.1"' not in message
+        )
+
+
+logging.getLogger("uvicorn.access").addFilter(SkipPingAccessLogFilter())
+
 app = FastAPI(
     lifespan=lifespan,
     docs_url="/swagger",
@@ -29,4 +40,4 @@ app.router.include_router(recipe_router)
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, debug=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
